@@ -1,0 +1,6 @@
+{
+  "name": "DataSight: Analyzer & AI Reports",
+  "description": "Read CSV, XLS, JSON files. Analyze with charts, tables, filter, sort, export. Offline support and Custom AI insights.",
+  "requestFramePermissions": [],
+  "majorCapabilities": []
+}
