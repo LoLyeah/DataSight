@@ -30,6 +30,17 @@ export function DatasetExport({ dataset }: { dataset: Dataset }) {
     XLSX.writeFile(workbook, `${dataset.name}.xlsx`);
   };
 
+  const exportJSON = () => {
+    const json = JSON.stringify(dataset.data, null, 2);
+    const blob = new Blob([json], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${dataset.name}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   const exportPDF = () => {
     const doc = new jsPDF('landscape');
     const head = [dataset.columns];
@@ -59,9 +70,9 @@ export function DatasetExport({ dataset }: { dataset: Dataset }) {
           <span className="text-xs font-bold"><FileSpreadsheet className="h-5 w-5 mb-1" /> XLSX</span>
           <span className="text-[10px] opacity-70">Spreadsheet</span>
         </motion.button>
-        <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={() => {}} className="flex flex-col items-center justify-center p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/30 text-slate-400 dark:text-slate-500 cursor-not-allowed transition-colors duration-300 h-full">
-          <span className="text-xs font-bold text-slate-400">JSON</span>
-          <span className="text-[10px] text-slate-400 dark:text-slate-500">Raw Data</span>
+        <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={exportJSON} className="flex flex-col items-center justify-center p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/30 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors duration-300 h-full text-slate-900 dark:text-slate-200">
+          <span className="text-xs font-bold"><FileText className="h-5 w-5 mb-1" /> JSON</span>
+          <span className="text-[10px] text-slate-500">Raw Data</span>
         </motion.button>
         <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={exportCSV} className="flex flex-col items-center justify-center p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/30 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors duration-300 h-full text-slate-900 dark:text-slate-200">
           <span className="text-xs font-bold"><FileText className="h-5 w-5 mb-1" /> CSV</span>

@@ -22,12 +22,14 @@ import {
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dataset } from '@/store/appStore';
-import { ArrowUpDown } from 'lucide-react';
+import { ArrowUpDown, Type } from 'lucide-react';
 
 export function DatasetTable({ dataset }: { dataset: Dataset }) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [globalFilter, setGlobalFilter] = useState('');
+  const [fontSize, setFontSize] = useState<'compact' | 'default' | 'full'>('default');
   const tableContainerRef = useRef<HTMLDivElement>(null);
 
   const columns: ColumnDef<any>[] = React.useMemo(
@@ -76,24 +78,38 @@ export function DatasetTable({ dataset }: { dataset: Dataset }) {
   const rowVirtualizer = useVirtualizer({
     count: rows.length,
     getScrollElement: () => tableContainerRef.current,
-    estimateSize: () => 48, // approximate row height
+    estimateSize: () => fontSize === 'compact' ? 24 : fontSize === 'full' ? 60 : 48,
     overscan: 10,
   });
 
   return (
-    <div className="flex flex-col h-full space-y-4">
-      <div className="flex items-center gap-4 shrink-0 px-4 pt-4 border-b border-slate-200 dark:border-slate-800 pb-4 transition-colors duration-300">
-        <div className="flex gap-4">
+    <div className="flex flex-col h-full min-h-0 space-y-4">
+      <div className="flex items-center gap-4 shrink-0 px-4 pt-4 border-b border-slate-200 dark:border-slate-800 pb-4 transition-colors duration-300 flex-wrap">
+        <div className="flex gap-4 items-center">
           <div className="text-sm text-slate-500 dark:text-slate-400">Filename: <span className="text-slate-900 dark:text-slate-100 font-medium">{dataset.name}</span></div>
-          <div className="text-sm text-slate-500 dark:text-slate-400">Rows: <span className="text-slate-900 dark:text-slate-100 font-medium">{dataset.data.length}</span></div>
+          <div className="text-sm text-slate-500 dark:text-slate-400 border-l border-slate-200 dark:border-slate-700 pl-4">Rows: <span className="text-slate-900 dark:text-slate-100 font-medium">{dataset.data.length}</span></div>
         </div>
-        <div className="flex-1"></div>
-        <Input
-          placeholder="Filter data globally..."
-          value={globalFilter ?? ''}
-          onChange={(event) => setGlobalFilter(event.target.value)}
-          className="max-w-[200px] h-8 bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-700 text-xs focus-visible:ring-blue-500 text-slate-900 dark:text-slate-200 transition-colors duration-300"
-        />
+        <div className="flex-1 min-w-[200px] flex justify-end gap-2 items-center">
+          <div className="flex items-center gap-2 mr-2">
+             <Type className="w-4 h-4 text-slate-400" />
+             <Select value={fontSize} onValueChange={(val: any) => setFontSize(val)}>
+                <SelectTrigger className="w-[110px] h-8 text-xs bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-700">
+                   <SelectValue placeholder="Display" />
+                </SelectTrigger>
+                <SelectContent>
+                   <SelectItem value="compact" className="text-xs">Compact</SelectItem>
+                   <SelectItem value="default" className="text-sm">Default</SelectItem>
+                   <SelectItem value="full" className="text-base">Full</SelectItem>
+                </SelectContent>
+             </Select>
+          </div>
+          <Input
+            placeholder="Filter data globally..."
+            value={globalFilter ?? ''}
+            onChange={(event) => setGlobalFilter(event.target.value)}
+            className="w-full sm:max-w-[200px] h-8 bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-700 text-xs focus-visible:ring-blue-500 text-slate-900 dark:text-slate-200 transition-colors duration-300"
+          />
+        </div>
       </div>
       
       <div 
@@ -108,7 +124,7 @@ export function DatasetTable({ dataset }: { dataset: Dataset }) {
                    return (
                      <TableHead 
                         key={header.id} 
-                        className="whitespace-nowrap text-slate-700 dark:text-slate-300 font-medium p-2 h-10 border-slate-200 dark:border-slate-700"
+                        className={`whitespace-nowrap text-slate-700 dark:text-slate-300 font-medium ${fontSize === 'compact' ? 'px-2 h-7 text-xs' : fontSize === 'full' ? 'p-4 h-12 text-base' : 'p-2 h-10'} border-slate-200 dark:border-slate-700`}
                      >
                        {header.isPlaceholder
                          ? null
@@ -144,7 +160,7 @@ export function DatasetTable({ dataset }: { dataset: Dataset }) {
                        {row.getVisibleCells().map((cell) => (
                          <TableCell 
                             key={cell.id} 
-                            className="max-w-[300px] truncate p-3 text-slate-600 dark:text-slate-400"
+                            className={`max-w-[300px] truncate ${fontSize === 'compact' ? 'px-2 py-0.5 text-[11px] leading-tight' : fontSize === 'full' ? 'p-4 text-base' : 'p-3 text-sm'} text-slate-600 dark:text-slate-400`}
                          >
                            {flexRender(
                              cell.column.columnDef.cell,

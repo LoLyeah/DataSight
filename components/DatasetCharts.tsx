@@ -25,11 +25,12 @@ export function DatasetCharts({ dataset }: { dataset: Dataset }) {
   const [aggregation, setAggregation] = useState<'none' | 'sum' | 'count'>('none');
 
   const chartData = useMemo(() => {
-    let data = dataset.data;
+    let rawData = dataset.data;
+    let processedData = [];
     
     if (aggregation !== 'none') {
         const grouped = new Map<string, any>();
-        data.forEach(row => {
+        rawData.forEach(row => {
             const xVal = String(row[xAxis] ?? 'Unknown');
             if (!grouped.has(xVal)) {
                 grouped.set(xVal, { [xAxis]: xVal, [yAxis]: 0 });
@@ -46,20 +47,26 @@ export function DatasetCharts({ dataset }: { dataset: Dataset }) {
             }
         });
         
-        data = Array.from(grouped.values());
+        processedData = Array.from(grouped.values());
         // Sort by X or Y if needed, let's keep it order of appearance
     } else {
         // If no aggregation, cap at 100 to avoid performance issues
-        if (data.length > 100) {
-            data = data.slice(0, 100);
+        if (rawData.length > 100) {
+            rawData = rawData.slice(0, 100);
         }
+        
+        // Ensure yAxis values are numeric for proper charting
+        processedData = rawData.map(row => ({
+            ...row,
+            [yAxis]: !isNaN(Number(row[yAxis])) ? Number(row[yAxis]) : 0
+        }));
     }
     
-    return data;
+    return processedData;
   }, [dataset.data, xAxis, yAxis, aggregation]);
 
   return (
-    <div className="flex flex-col h-full space-y-4">
+    <div className="flex flex-col h-full min-h-[500px] space-y-4 min-w-0">
       <div className="p-4 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl grid grid-cols-1 md:grid-cols-4 gap-4 items-end shrink-0 transition-colors duration-300">
           <div className="space-y-2">
              <Label className="text-slate-500 dark:text-slate-400 text-xs uppercase">Chart Type</Label>
@@ -113,28 +120,28 @@ export function DatasetCharts({ dataset }: { dataset: Dataset }) {
           </div>
       </div>
       
-      <div className="flex-1 w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-4 shadow-sm min-h-[250px] transition-colors duration-300">
-        <ResponsiveContainer width="100%" height="100%">
-          {chartType === 'bar' ? (
-              <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 50 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#94a3b8" opacity={0.3} />
-                <XAxis dataKey={xAxis} stroke="#94a3b8" angle={-45} textAnchor="end" height={80} interval={0} tick={{ fill: '#64748b', fontSize: 10 }} />
-                <YAxis stroke="#94a3b8" tick={{ fill: '#64748b', fontSize: 10 }} />
-                <Tooltip contentStyle={{ backgroundColor: 'rgb(30, 41, 59)', border: '1px solid #334155', borderRadius: '8px', color: '#f8fafc' }} />
-                <Legend />
-                <Bar dataKey={yAxis} fill="#3b82f6" radius={[4, 4, 0, 0]} animationDuration={1000} />
-              </BarChart>
-          ) : (
-              <LineChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 50 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#94a3b8" opacity={0.3} />
-                <XAxis dataKey={xAxis} stroke="#94a3b8" angle={-45} textAnchor="end" height={80} interval={0} tick={{ fill: '#64748b', fontSize: 10 }} />
-                <YAxis stroke="#94a3b8" tick={{ fill: '#64748b', fontSize: 10 }} />
-                <Tooltip contentStyle={{ backgroundColor: 'rgb(30, 41, 59)', border: '1px solid #334155', borderRadius: '8px', color: '#f8fafc' }} />
-                <Legend />
-                <Line type="monotone" dataKey={yAxis} stroke="#3b82f6" activeDot={{ r: 8, fill: '#60a5fa' }} animationDuration={1000} />
-              </LineChart>
-          )}
-        </ResponsiveContainer>
+      <div className="flex-1 w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl shadow-sm transition-colors duration-300 min-h-[400px]">
+        <ResponsiveContainer width="99%" height={400}>
+            {chartType === 'bar' ? (
+              <BarChart data={chartData} margin={{ top: 20, right: 30, left: 10, bottom: 70 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#94a3b8" opacity={0.3} />
+              <XAxis dataKey={xAxis} stroke="#94a3b8" angle={-45} textAnchor="end" height={80} tick={{ fill: '#64748b', fontSize: 10 }} tickFormatter={(val) => typeof val === 'string' && val.length > 15 ? val.slice(0, 15) + '...' : val} />
+              <YAxis stroke="#94a3b8" tick={{ fill: '#64748b', fontSize: 10 }} width={60} tickFormatter={(val) => typeof val === 'number' && val >= 1000 ? (val/1000).toFixed(1)+'k' : val.toString()} />
+              <Tooltip contentStyle={{ backgroundColor: 'rgb(30, 41, 59)', border: '1px solid #334155', borderRadius: '8px', color: '#f8fafc' }} />
+              <Legend verticalAlign="top" height={36} />
+              <Bar dataKey={yAxis} fill="#3b82f6" radius={[4, 4, 0, 0]} animationDuration={1000} />
+            </BarChart>
+        ) : (
+            <LineChart data={chartData} margin={{ top: 20, right: 30, left: 10, bottom: 70 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#94a3b8" opacity={0.3} />
+              <XAxis dataKey={xAxis} stroke="#94a3b8" angle={-45} textAnchor="end" height={80} tick={{ fill: '#64748b', fontSize: 10 }} tickFormatter={(val) => typeof val === 'string' && val.length > 15 ? val.slice(0, 15) + '...' : val} />
+              <YAxis stroke="#94a3b8" tick={{ fill: '#64748b', fontSize: 10 }} width={60} tickFormatter={(val) => typeof val === 'number' && val >= 1000 ? (val/1000).toFixed(1)+'k' : val.toString()} />
+              <Tooltip contentStyle={{ backgroundColor: 'rgb(30, 41, 59)', border: '1px solid #334155', borderRadius: '8px', color: '#f8fafc' }} />
+              <Legend verticalAlign="top" height={36} />
+              <Line type="monotone" dataKey={yAxis} stroke="#3b82f6" activeDot={{ r: 8, fill: '#60a5fa' }} animationDuration={1000} />
+            </LineChart>
+        )}
+          </ResponsiveContainer>
       </div>
     </div>
   );

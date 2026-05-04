@@ -28,18 +28,94 @@ export function FileUploader() {
         });
       } else if (extension === 'json') {
         const text = await file.text();
-        const data = JSON.parse(text);
-        if (Array.isArray(data)) {
-          parsedData = data;
-        } else if (typeof data === 'object' && data !== null) {
-          // If it's a single object, wrap in array or look for an array inside (heuristic)
-          const firstArrayValues = Object.values(data).find(v => Array.isArray(v));
-          if (firstArrayValues) {
-             parsedData = firstArrayValues as any[];
-          } else {
-             parsedData = [data];
+        let data;
+        try {
+          data = JSON.parse(text);
+        } catch (err) {
+          try {
+            let fixedText = text.trim();
+            if (fixedText.endsWith(']') && !fixedText.startsWith('[')) {
+                fixedText = '[' + fixedText;
+            } else if (fixedText.startsWith('[') && !fixedText.endsWith(']')) {
+                fixedText = fixedText.replace(/,\s*$/, '') + ']';
+            } else if (fixedText.startsWith('{') && !fixedText.endsWith(']')) {
+                fixedText = '[' + fixedText.replace(/,\s*$/, '') + ']';
+            }
+            data = JSON.parse(fixedText);
+          } catch (err2) {
+            try {
+              // Attempt to parse as JSONL (JSON Lines)
+              data = text.split('\n').map(line => line.trim()).filter(Boolean).map(line => JSON.parse(line));
+            } catch (err3) {
+              throw new Error("Failed to parse JSON. Please ensure the file contains valid JSON.");
+            }
           }
         }
+        
+        function flattenData(dataObj: any): any[] {
+            if (!Array.isArray(dataObj)) return [dataObj];
+            if (dataObj.length === 0) return [];
+            
+            let result: any[] = [];
+            
+            for (const item of dataObj) {
+                if (typeof item !== 'object' || item === null) {
+                    result.push({ value: item });
+                    continue;
+                }
+                
+                let flattenedItem: any = {};
+                let nestedArrays: Record<string, any[]> = {};
+                
+                for (const [key, val] of Object.entries(item)) {
+                    if (Array.isArray(val) && val.length > 0 && typeof val[0] === 'object') {
+                        nestedArrays[key] = val;
+                    } else if (val !== null && typeof val === 'object' && !Array.isArray(val)) {
+                        for(const [k, v] of Object.entries(val)) {
+                            flattenedItem[key + '_' + k] = v;
+                        }
+                    } else {
+                        // arrays of primitives or normal primitives
+                        flattenedItem[key] = Array.isArray(val) ? val.join(', ') : val;
+                    }
+                }
+                
+                const arrayKeys = Object.keys(nestedArrays);
+                if (arrayKeys.length === 0) {
+                    result.push(flattenedItem);
+                } else {
+                    let expanded = [flattenedItem];
+                    
+                    for (const key of arrayKeys) {
+                        let nextExpanded: any[] = [];
+                        for (const row of expanded) {
+                            for (const nestedItem of nestedArrays[key]) {
+                                const subItems = flattenData([nestedItem]);
+                                for (const sub of subItems) {
+                                    let newRow = { ...row };
+                                    for (const [subK, subV] of Object.entries(sub)) {
+                                        newRow[key + '_' + subK] = subV;
+                                    }
+                                    nextExpanded.push(newRow);
+                                }
+                            }
+                        }
+                        expanded = nextExpanded;
+                    }
+                    result.push(...expanded);
+                }
+            }
+            return result;
+        }
+
+        let baseData = data;
+        if (!Array.isArray(data) && typeof data === 'object' && data !== null) {
+            const firstArrayValues = Object.values(data).find(v => Array.isArray(v));
+            baseData = firstArrayValues ? firstArrayValues : [data];
+        }
+        
+        parsedData = flattenData(baseData);
+        
       } else if (extension === 'xls' || extension === 'xlsx') {
          const data = await file.arrayBuffer();
          const workbook = XLSX.read(data, { type: 'array' });
@@ -59,7 +135,7 @@ export function FileUploader() {
       
     } catch (err) {
       console.error(err);
-      alert('Error parsing file.');
+      alert(err instanceof Error ? err.message : 'Error parsing file.');
     } finally {
       setLoading(false);
     }

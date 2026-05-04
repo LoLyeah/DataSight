@@ -11,6 +11,7 @@ export interface Dataset {
 }
 
 export interface AIConfig {
+  provider: 'gemini' | 'custom';
   apiKey: string;
   baseURL: string;
   model: string;
@@ -52,6 +53,7 @@ const deriveColumns = (data: any[]): string[] => {
 
 export const useAppStore = create<AppState>((set, get) => ({
   aiConfig: {
+    provider: 'gemini',
     apiKey: '',
     baseURL: 'https://api.groq.com/openai/v1',
     model: 'llama3-8b-8192',

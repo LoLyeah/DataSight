@@ -15,7 +15,6 @@ import { Button } from '@/components/ui/button';
 import { Database, Plus, Trash2, PieChart, Table as TableIcon, Sparkles, Download, Menu, X } from 'lucide-react';
 import { format } from 'date-fns';
 import { motion, AnimatePresence } from 'motion/react';
-import { DatasetAIReportTrigger } from '@/components/DatasetAIReportTrigger'; // Let's ignore this and put button directly
 
 export default function Home() {
   const { 
@@ -24,8 +23,11 @@ export default function Home() {
     activeDataset, 
     loadDatasetsMeta, 
     setActiveDatasetId, 
-    deleteDataset 
+    deleteDataset,
+    aiConfig
   } = useAppStore();
+
+  const [activeTab, setActiveTab] = useState("table");
 
   useEffect(() => {
     loadDatasetsMeta();
@@ -90,10 +92,10 @@ export default function Home() {
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -10 }}
           transition={{ duration: 0.3 }}
-          className="flex-1 overflow-y-auto lg:overflow-hidden pb-4"
+          className="flex-1 overflow-hidden pb-4 flex flex-col min-h-0"
         >
           {!activeDatasetId ? (
-            <div className="h-full w-full flex items-center justify-center">
+            <div className="h-full w-full overflow-y-auto flex items-center justify-center">
               <div className="max-w-4xl w-full grid grid-cols-1 md:grid-cols-2 gap-8">
                  <motion.div 
                     initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.1 }}
@@ -134,72 +136,101 @@ export default function Home() {
               </div>
             </div>
           ) : activeDataset ? (
-             <motion.div variants={containerVariants} initial="hidden" animate="visible" className="flex-1 grid grid-cols-1 lg:grid-cols-12 grid-rows-none lg:grid-rows-6 gap-4 h-full">
-                
-                {/* Feature 1: AI Chat & Summary */}
-                <motion.div variants={itemVariants} className="col-span-1 lg:col-span-3 lg:row-span-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 overflow-y-auto thin-scrollbar transition-colors duration-300">
-                   <div className="flex items-center gap-2 mb-3">
-                     <span className="text-xs font-semibold text-blue-500 dark:text-blue-400 uppercase tracking-wider">AI Insights</span>
-                   </div>
-                   <DatasetAI dataset={activeDataset} />
-                </motion.div>
+              <motion.div variants={containerVariants} initial="hidden" animate="visible" className="flex-1 flex flex-col min-h-0 h-full pb-8">
+                 <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0">
+                    <TabsList className="mb-4 w-fit shrink-0">
+                       <TabsTrigger value="table"><TableIcon className="w-4 h-4 mr-2" /> Data</TabsTrigger>
+                       <TabsTrigger value="charts"><PieChart className="w-4 h-4 mr-2" /> Visualizations</TabsTrigger>
+                       <TabsTrigger value="ai"><Sparkles className="w-4 h-4 mr-2" /> AI Insights</TabsTrigger>
+                       <TabsTrigger value="export"><Download className="w-4 h-4 mr-2" /> Export</TabsTrigger>
+                    </TabsList>
+                    
+                    <div className="flex-1 min-h-0 relative">
+                       <AnimatePresence mode="wait">
+                          <motion.div 
+                             key={activeTab}
+                             initial={{ opacity: 0, y: 10, scale: 0.99 }}
+                             animate={{ opacity: 1, y: 0, scale: 1 }}
+                             exit={{ opacity: 0, y: -10, scale: 0.99 }}
+                             transition={{ duration: 0.2 }}
+                             className="absolute inset-0 h-full flex flex-col"
+                          >
+                            {activeTab === "table" && (
+                               <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl flex flex-col overflow-hidden transition-colors duration-300 h-full flex-1 min-h-0">
+                                  <DatasetTable dataset={activeDataset} />
+                               </div>
+                            )}
 
-                {/* Main Data Table Card */}
-                <motion.div variants={itemVariants} className="col-span-1 lg:col-span-9 lg:row-span-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl flex flex-col overflow-hidden transition-colors duration-300">
-                   <DatasetTable dataset={activeDataset} />
-                </motion.div>
+                            {activeTab === "charts" && (
+                               <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 flex flex-col transition-colors duration-300 h-full flex-1 min-h-0 overflow-y-auto">
+                                  <DatasetCharts dataset={activeDataset} />
+                               </div>
+                            )}
 
-                {/* Export / Format Options Card */}
-                <motion.div variants={itemVariants} className="col-span-1 lg:col-span-3 lg:row-span-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 overflow-y-auto transition-colors duration-300">
-                   <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-4">Export Options</h3>
-                   <DatasetExport dataset={activeDataset} />
-                </motion.div>
+                            {activeTab === "ai" && (
+                               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 h-full flex-1 min-h-0">
+                                  <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 flex flex-col transition-colors duration-300 h-full flex-1 min-h-0">
+                                     <div className="flex items-center gap-2 mb-3 shrink-0">
+                                       <span className="text-xs font-semibold text-blue-500 dark:text-blue-400 uppercase tracking-wider">AI Chat</span>
+                                     </div>
+                                     <div className="flex-1 overflow-hidden min-h-0">
+                                        <DatasetAI dataset={activeDataset} />
+                                     </div>
+                                  </div>
+                                  
+                                  <div className="bg-gradient-to-br from-blue-500 to-indigo-600 dark:from-blue-600 dark:to-indigo-700 rounded-2xl p-5 text-white shadow-lg relative overflow-hidden flex flex-col transition-colors duration-300 h-full max-h-[800px]">
+                                     <div className="relative z-10 h-full flex flex-col">
+                                        <h3 className="text-lg font-bold mb-2 shrink-0">AI Narrative Report</h3>
+                                        <p className="text-sm text-blue-100 mb-4 shrink-0">Generate a comprehensive summary report analyzing key trends and outliers.</p>
+                                        <div className="flex-1 min-h-0 overflow-y-auto">
+                                           <DatasetAI dataset={activeDataset} mode="report" />
+                                        </div>
+                                        <div className="mt-auto pt-4 space-y-2 shrink-0">
+                                           <div className="text-xs text-blue-200">Powered by {aiConfig.provider === 'gemini' ? 'Gemini AI' : aiConfig.model}</div>
+                                        </div>
+                                     </div>
+                                     <div className="absolute -right-4 -bottom-4 w-24 h-24 bg-white/20 dark:bg-white/10 rounded-full blur-2xl pointer-events-none"></div>
+                                  </div>
+                               </div>
+                            )}
 
-                {/* AI Report Generator Box (To match theme) */}
-                <motion.div variants={itemVariants} className="col-span-1 lg:col-span-3 lg:row-span-2 bg-gradient-to-br from-blue-500 to-indigo-600 dark:from-blue-600 dark:to-indigo-700 rounded-2xl p-5 text-white shadow-lg relative overflow-hidden flex flex-col transition-colors duration-300">
-                   <div className="relative z-10 h-full flex flex-col">
-                      <h3 className="text-lg font-bold mb-2">AI Narrative Report</h3>
-                      <p className="text-sm text-blue-100 mb-4">Generate a comprehensive summary report analyzing key trends and outliers.</p>
-                      <DatasetAI dataset={activeDataset} mode="report" />
-                      <div className="mt-auto pt-4 space-y-2">
-                         <div className="text-xs text-blue-200">Powered by OpenAI / Groq</div>
-                      </div>
-                   </div>
-                   <div className="absolute -right-4 -bottom-4 w-24 h-24 bg-white/20 dark:bg-white/10 rounded-full blur-2xl pointer-events-none"></div>
-                </motion.div>
-
-                {/* Quick Stats / Charts */}
-                <motion.div variants={itemVariants} className="col-span-1 lg:col-span-5 lg:row-span-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 overflow-y-auto flex flex-col transition-colors duration-300">
-                   <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">Visualizations</h3>
-                   <div className="flex-1 min-h-[250px]">
-                      <DatasetCharts dataset={activeDataset} />
-                   </div>
-                </motion.div>
-
-                {/* System Status Card */}
-                <motion.div variants={itemVariants} className="col-span-1 lg:col-span-4 lg:row-span-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 transition-colors duration-300">
-                   <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">System Status</h3>
-                   <div className="space-y-4 pt-2">
-                     <div className="flex items-center justify-between">
-                       <div className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-200">
-                         <div className="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.5)]"></div>
-                         Local Offline Storage
-                       </div>
-                       <span className="text-xs text-slate-500">Active</span>
-                     </div>
-                     <div className="flex items-center justify-between">
-                       <div className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-200">
-                         <div className="w-2 h-2 rounded-full bg-blue-500"></div>
-                         AI Model
-                       </div>
-                       <span className="text-xs text-slate-500">Connected</span>
-                     </div>
-                     <div className="mt-4 p-2 bg-slate-50 dark:bg-slate-950 rounded border border-slate-200 dark:border-slate-800 text-[11px] text-slate-600 dark:text-slate-400 font-mono transition-colors duration-300">
-                       Rows: {activeDataset.data.length} | Columns: {activeDataset.columns.length}
-                     </div>
-                   </div>
-                </motion.div>
-             </motion.div>
+                            {activeTab === "export" && (
+                               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 h-full flex-1 min-h-0">
+                                   <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 flex flex-col transition-colors duration-300 flex-1 min-h-0">
+                                      <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-4 shrink-0">Export Options</h3>
+                                      <div className="flex-1 min-h-0">
+                                        <DatasetExport dataset={activeDataset} />
+                                      </div>
+                                   </div>
+                                   <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 flex flex-col transition-colors duration-300 flex-1 min-h-0">
+                                       <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3 shrink-0">System Status</h3>
+                                       <div className="space-y-4 pt-2 flex-1 min-h-0 overflow-y-auto">
+                                         <div className="flex items-center justify-between">
+                                           <div className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-200">
+                                             <div className="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.5)]"></div>
+                                             Local Offline Storage
+                                           </div>
+                                           <span className="text-xs text-slate-500">Active</span>
+                                         </div>
+                                         <div className="flex items-center justify-between">
+                                           <div className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-200">
+                                             <div className={`w-2 h-2 rounded-full ${(aiConfig.provider === 'gemini' && process.env.NEXT_PUBLIC_GEMINI_API_KEY) || (aiConfig.provider === 'custom' && aiConfig.apiKey) ? 'bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.5)]' : 'bg-red-500'}`}></div>
+                                             AI Model
+                                           </div>
+                                           <span className="text-xs text-slate-500">{(aiConfig.provider === 'gemini' && process.env.NEXT_PUBLIC_GEMINI_API_KEY) || (aiConfig.provider === 'custom' && aiConfig.apiKey) ? 'Connected' : 'Missing Config'}</span>
+                                         </div>
+                                         <div className="mt-4 p-2 bg-slate-50 dark:bg-slate-950 rounded border border-slate-200 dark:border-slate-800 text-[11px] text-slate-600 dark:text-slate-400 font-mono transition-colors duration-300">
+                                           Rows: {activeDataset.data.length} | Columns: {activeDataset.columns.length}
+                                         </div>
+                                       </div>
+                                   </div>
+                               </div>
+                            )}
+                          </motion.div>
+                       </AnimatePresence>
+                    </div>
+                 </Tabs>
+              </motion.div>
           ) : (
             <div className="flex items-center justify-center min-h-[60vh]">
                <motion.div 
