@@ -63,19 +63,23 @@ export function DatasetExport({ dataset }: { dataset: Dataset }) {
     <div className="flex flex-col gap-2 h-full">
       <div className="grid grid-cols-2 gap-2 h-full items-center">
         <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={exportPDF} className="flex flex-col items-center justify-center p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/30 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors duration-300 h-full text-slate-900 dark:text-slate-200">
-          <span className="text-xs font-bold"><FileDown className="h-5 w-5 mb-1" /> PDF</span>
+          <FileDown className="h-5 w-5 mb-1" />
+          <span className="text-xs font-bold">PDF</span>
           <span className="text-[10px] text-slate-500">Report Table</span>
         </motion.button>
         <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={exportExcel} className="flex flex-col items-center justify-center p-3 rounded-xl border border-blue-500/50 bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-500/20 transition-colors duration-300 h-full">
-          <span className="text-xs font-bold"><FileSpreadsheet className="h-5 w-5 mb-1" /> XLSX</span>
+          <FileSpreadsheet className="h-5 w-5 mb-1" />
+          <span className="text-xs font-bold">XLSX</span>
           <span className="text-[10px] opacity-70">Spreadsheet</span>
         </motion.button>
         <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={exportJSON} className="flex flex-col items-center justify-center p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/30 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors duration-300 h-full text-slate-900 dark:text-slate-200">
-          <span className="text-xs font-bold"><FileText className="h-5 w-5 mb-1" /> JSON</span>
+          <FileText className="h-5 w-5 mb-1" />
+          <span className="text-xs font-bold">JSON</span>
           <span className="text-[10px] text-slate-500">Raw Data</span>
         </motion.button>
         <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={exportCSV} className="flex flex-col items-center justify-center p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/30 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors duration-300 h-full text-slate-900 dark:text-slate-200">
-          <span className="text-xs font-bold"><FileText className="h-5 w-5 mb-1" /> CSV</span>
+          <FileText className="h-5 w-5 mb-1" />
+          <span className="text-xs font-bold">CSV</span>
           <span className="text-[10px] text-slate-500">Table Data</span>
         </motion.button>
       </div>

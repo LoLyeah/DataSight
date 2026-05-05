@@ -12,6 +12,7 @@ export default function ReportPage() {
   useEffect(() => {
     const data = localStorage.getItem('dataSight_currentReport');
     if (data) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setReport(JSON.parse(data));
     }
   }, []);

@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Sparkles, FileText, Loader2, Settings } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import ReactMarkdown from 'react-markdown';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 export function DatasetAI({ dataset, mode = 'summary' }: { dataset: Dataset, mode?: 'summary' | 'report' }) {
@@ -228,8 +229,10 @@ User Prompt: ${prompt}
                Analysis results will appear here. Powered by {aiConfig.provider === 'gemini' ? 'Gemini' : aiConfig.model}.
             </p>
          ) : (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="whitespace-pre-wrap text-sm text-slate-800 dark:text-slate-300">
-              {result}
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-sm text-slate-800 dark:text-slate-300">
+              <div className="prose prose-sm dark:prose-invert max-w-none">
+                 <ReactMarkdown>{result}</ReactMarkdown>
+              </div>
             </motion.div>
          )}
       </div>
